@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        input {
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+    <h1>User Management</h1>
+
+    <h2>Add User</h2>
+    <form id="addUserForm">
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <button type="submit">Add User</button>
+    </form>
+
+    <h2>Users</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="userList"></tbody>
+    </table>
+
+    <h2>Update User</h2>
+    <form id="updateUserForm">
+        <input type="number" id="updateUserId" placeholder="User ID" required>
+        <input type="text" id="updateName" placeholder="New Name" required>
+        <input type="email" id="updateEmail" placeholder="New Email" required>
+        <button type="submit">Update User</button>
+    </form>
+
+    <h2>Delete User</h2>
+    <form id="deleteUserForm">
+        <input type="number" id="deleteUserId" placeholder="User ID" required>
+        <button type="submit">Delete User</button>
+    </form>
+
+    <script>
+        const userList = document.getElementById('userList');
+        
+        // Fetch all users
+        async function fetchUsers() {
+            const response = await fetch('http://localhost:3000/users');
+            const users = await response.json();
+            userList.innerHTML = '';
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <button onclick="fillUpdateForm(${user.id}, '${user.name}', '${user.email}')">Edit</button>
+                    </td>
+                `;
+                userList.appendChild(row);
+            });
+        }
+
+        // Fill the update form
+        function fillUpdateForm(id, name, email) {
+            document.getElementById('updateUserId').value = id;
+            document.getElementById('updateName').value = name;
+            document.getElementById('updateEmail').value = email;
+        }
+
+        // Add a new user
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+
+            await fetch('http://localhost:3000/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, email })
+            });
+
+            fetchUsers();
+            e.target.reset();
+        });
+
+        // Update a user
+        document.getElementById('updateUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('updateUserId').value;
+            const name = document.getElementById('updateName').value;
+            const email = document.getElementById('updateEmail').value;
+
+            await fetch(`http://localhost:3000/users/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, email })
+            });
+
+            fetchUsers();
+            e.target.reset();
+        });
+
+        // Delete a user
+        document.getElementById('deleteUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('deleteUserId').value;
+
+            await fetch(`http://localhost:3000/users/${id}`, {
+                method: 'DELETE'
+            });
+
+            fetchUsers();
+            e.target.reset();
+        });
+
+        // Initial fetch
+        fetchUsers();
+    </script>
+</body>
+</html>
